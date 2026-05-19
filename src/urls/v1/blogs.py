@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db_config import get_db
 from src.database.models import User
-from src.services.blogs.schema import BlogCreate, BlogUpdate
+from src.services.blogs.schema import BlogCreate, BlogUpdate,BlogPatch
 from src.services.blogs import controller
 from src.utils.security import get_current_user
 
@@ -42,6 +42,16 @@ async def update_blog(
     current_user: User = Depends(get_current_user)
 ):
     return await controller.update_blog(blog_id, blog_data, db, current_user)
+
+
+@router.patch("/{blog_id}")
+async def patch_blog(
+    blog_id: int,
+    blog_data: BlogPatch,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return await controller.patch_blog(blog_id, blog_data, db, current_user)
 
 
 @router.delete("/{blog_id}")
