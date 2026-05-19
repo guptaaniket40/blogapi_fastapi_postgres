@@ -6,6 +6,7 @@ from src.database.models import Blog, User
 from src.services.blogs.schema import BlogCreate, BlogUpdate
 from src.services.blogs.serializers import serialize_blog, serialize_blog_list
 from src.utils.response import success_response
+from src.utils.s3_upload import upload_base64_image_to_s3
 
 
 async def create_blog(
@@ -13,11 +14,20 @@ async def create_blog(
     db: AsyncSession,
     current_user: User
 ):
+    image_url = None
+
+    if blog_data.image_base64 and blog_data.image_name:
+        image_url = await upload_base64_image_to_s3(
+            blog_data.image_base64,
+            blog_data.image_name
+        )
+
     new_blog = Blog(
         title=blog_data.title,
         content=blog_data.content,
         author=blog_data.author,
-        user_id=current_user.id
+        user_id=current_user.id,
+        image_url=image_url
     )
 
     db.add(new_blog)
@@ -84,6 +94,12 @@ async def update_blog(
     blog.title = blog_data.title
     blog.content = blog_data.content
     blog.author = blog_data.author
+
+    if blog_data.image_base64 and blog_data.image_name:
+        blog.image_url = await upload_base64_image_to_s3(
+            blog_data.image_base64,
+            blog_data.image_name
+        )
 
     await db.commit()
     await db.refresh(blog)

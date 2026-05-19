@@ -5,6 +5,7 @@ def serialize_blog(blog):
         "content": blog.content,
         "author": blog.author,
         "user_id": blog.user_id,
+        "image_url": blog.image_url,
         "created_at": blog.created_at.isoformat() if blog.created_at else None
     }
 

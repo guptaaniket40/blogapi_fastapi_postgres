@@ -7,9 +7,14 @@ from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.config import settings
 from src.database.db_config import get_db
 from src.database.models import User
+from src.database.jwt_config import (
+    SECRET_KEY,
+    ALGORITHM,
+    ACCESS_TOKEN_EXPIRE_MINUTES
+)
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -28,15 +33,15 @@ def create_access_token(data: dict):
     to_encode = data.copy()
 
     expire = datetime.utcnow() + timedelta(
-        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
     )
 
     to_encode.update({"exp": expire})
 
     return jwt.encode(
         to_encode,
-        settings.SECRET_KEY,
-        algorithm=settings.ALGORITHM
+        SECRET_KEY,
+        algorithm=ALGORITHM
     )
 
 
@@ -47,8 +52,8 @@ async def get_current_user(
     try:
         payload = jwt.decode(
             token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM]
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
         )
 
         user_id = payload.get("user_id")
@@ -65,7 +70,9 @@ async def get_current_user(
             detail="Invalid token"
         )
 
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(
+        select(User).where(User.id == user_id)
+    )
     user = result.scalar_one_or_none()
 
     if not user:
