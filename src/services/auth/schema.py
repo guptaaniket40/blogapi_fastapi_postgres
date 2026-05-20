@@ -1,21 +1,47 @@
-from typing import Annotated
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from sqlalchemy.future import select
+
+from src.database.models import User
+from src.database.db_config import db
 
 
-class UserSignup(BaseModel):
-    name: Annotated[str, Field(min_length=3, max_length=100)]
-    email: EmailStr
-    password: Annotated[str, Field(min_length=6, max_length=72)]
+class UserSchema:
 
+    @classmethod
+    async def get_user_data(
+        cls,
+        user_id=None,
+        email=None
+    ):
+        query = select(User)
 
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: Annotated[str, Field(min_length=6, max_length=72)]
+        if user_id:
+            query = query.where(User.id == user_id)
 
+        if email:
+            query = query.where(User.email == email)
 
-class UserResponse(BaseModel):
-    id: int
-    name: str
-    email: str
+        result = await db.execute(query)
 
-    model_config = ConfigDict(from_attributes=True)
+        if user_id or email:
+            user = result.scalar_one_or_none()
+        else:
+            user = result.scalars().all()
+
+        return user
+
+    @classmethod
+    async def create_user(
+        cls,
+        request
+    ):
+        new_user = User(
+            name=request.name,
+            email=request.email,
+            password=request.password
+        )
+
+        db.add(new_user)
+        await db.commit()
+        await db.refresh(new_user)
+
+        return new_user

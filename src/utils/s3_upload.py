@@ -5,13 +5,13 @@ from urllib.parse import urlparse
 import aioboto3
 from fastapi import HTTPException, status
 
-from src.database.config import settings
+from src.database.config import Config
 
 
 def get_s3_image_url(file_key: str) -> str:
     return (
-        f"https://{settings.AWS_BUCKET_NAME}.s3."
-        f"{settings.AWS_REGION}.amazonaws.com/{file_key}"
+        f"https://{Config.AWS_BUCKET_NAME}.s3."
+        f"{Config.AWS_REGION}.amazonaws.com/{file_key}"
     )
 
 
@@ -20,7 +20,10 @@ def get_s3_key_from_url(image_url: str) -> str:
     return parsed_url.path.lstrip("/")
 
 
-async def upload_base64_image_to_s3(image_base64: str, image_name: str) -> str:
+async def upload_base64_image_to_s3(
+    image_base64: str,
+    image_name: str
+) -> str:
     try:
         if "," in image_base64:
             image_base64 = image_base64.split(",")[1]
@@ -45,12 +48,12 @@ async def upload_base64_image_to_s3(image_base64: str, image_name: str) -> str:
 
         async with session.client(
             "s3",
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name=settings.AWS_REGION,
+            aws_access_key_id=Config.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=Config.AWS_SECRET_ACCESS_KEY,
+            region_name=Config.AWS_REGION,
         ) as s3_client:
             await s3_client.put_object(
-                Bucket=settings.AWS_BUCKET_NAME,
+                Bucket=Config.AWS_BUCKET_NAME,
                 Key=file_key,
                 Body=image_bytes,
                 ContentType=content_type,
@@ -73,12 +76,12 @@ async def delete_image_from_s3(image_url: str) -> None:
 
         async with session.client(
             "s3",
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name=settings.AWS_REGION,
+            aws_access_key_id=Config.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=Config.AWS_SECRET_ACCESS_KEY,
+            region_name=Config.AWS_REGION,
         ) as s3_client:
             await s3_client.delete_object(
-                Bucket=settings.AWS_BUCKET_NAME,
+                Bucket=Config.AWS_BUCKET_NAME,
                 Key=image_key,
             )
 
