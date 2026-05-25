@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from src.database.models import Base
-from src.database.config import settings
+from src.database.config import Config
 
 
 config = context.config
@@ -17,8 +17,9 @@ if config.config_file_name is not None:
 
 config.set_main_option(
     "sqlalchemy.url",
-    settings.DATABASE_URL.replace("+asyncpg", "").replace("%", "%%")
+    Config.DB_CONFIG.replace("+asyncpg", "").replace("%", "%%")
 )
+
 
 target_metadata = Base.metadata
 
