@@ -1,4 +1,4 @@
-from sqlalchemy.future import select
+from sqlalchemy import select
 
 from src.database.models import User
 from src.database.db_config import db
