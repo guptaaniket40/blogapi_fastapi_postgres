@@ -1,8 +1,6 @@
 from fastapi import HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.models import User
+from src.services.auth.schema import UserSchema
 from src.services.auth.serializers import UserSignup, UserLogin, UserResponse
 from src.utils.response import success_response
 from src.utils.security import PasswordHasher, TokenHandler
@@ -13,13 +11,11 @@ class AuthController:
     @classmethod
     async def signup(
         cls,
-        user_data: UserSignup,
-        db: AsyncSession
+        user_data: UserSignup
     ):
-        result = await db.execute(
-            select(User).where(User.email == user_data.email)
+        existing_user = await UserSchema.get_user_data(
+            email=user_data.email
         )
-        existing_user = result.scalar_one_or_none()
 
         if existing_user:
             raise HTTPException(
@@ -27,19 +23,13 @@ class AuthController:
                 detail="Email already registered"
             )
 
-        hashed_password = await PasswordHasher.encrypt_password(
+        user_data.password = await PasswordHasher.encrypt_password(
             user_data.password
         )
 
-        new_user = User(
-            name=user_data.name,
-            email=user_data.email,
-            password=hashed_password
+        new_user = await UserSchema.create_user(
+            request=user_data
         )
-
-        db.add(new_user)
-        await db.commit()
-        await db.refresh(new_user)
 
         return success_response(
             "User registered successfully",
@@ -49,13 +39,11 @@ class AuthController:
     @classmethod
     async def login(
         cls,
-        user_data: UserLogin,
-        db: AsyncSession
+        user_data: UserLogin
     ):
-        result = await db.execute(
-            select(User).where(User.email == user_data.email)
+        user = await UserSchema.get_user_data(
+            email=user_data.email
         )
-        user = result.scalar_one_or_none()
 
         if not user:
             raise HTTPException(
@@ -90,7 +78,6 @@ class AuthController:
                 "token_type": "bearer"
             }
         )
-    
 
     @classmethod
     async def refresh_token(
@@ -122,4 +109,4 @@ class AuthController:
                 "access_token": new_access_token,
                 "token_type": "bearer"
             }
-        )       
+        )

@@ -22,12 +22,7 @@ class UserSchema:
 
         result = await db.execute(query)
 
-        if user_id or email:
-            user = result.scalar_one_or_none()
-        else:
-            user = result.scalars().all()
-
-        return user
+        return result.scalar_one_or_none()
 
     @classmethod
     async def create_user(

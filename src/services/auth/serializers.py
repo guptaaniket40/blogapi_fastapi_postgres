@@ -17,7 +17,7 @@ class UserLogin(BaseModel):
     password: Annotated[str, Field(min_length=6, max_length=72)]
 
 
-class RefreshTokenSerializer(BaseModel):
+class RefreshTokenRequest(BaseModel):
     refresh_token: str    
 
 

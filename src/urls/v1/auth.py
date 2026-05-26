@@ -1,39 +1,38 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter
 
-from src.database.db_config import db
 from src.services.auth.controller import AuthController
-from src.services.auth.serializers import UserSignup, UserLogin,RefreshTokenSerializer
+from src.services.auth.serializers import (
+    UserSignup,
+    UserLogin,
+    RefreshTokenRequest
+)
 
-
-router = APIRouter(prefix="/auth",tags=["Auth"])
+router= APIRouter(prefix="/auth",tags=["Auth"]
+)
 
 
 @router.post("/signup")
 async def signup(
-    user_data: UserSignup,
-    db_session: AsyncSession = Depends(db.get_db)
+    request: UserSignup
 ):
     return await AuthController.signup(
-        user_data=user_data,
-        db=db_session
+        user_data=request
     )
 
 
 @router.post("/login")
 async def login(
-    user_data: UserLogin,
-    db_session: AsyncSession = Depends(db.get_db)
+    request: UserLogin
 ):
     return await AuthController.login(
-        user_data=user_data,
-        db=db_session
+        user_data=request
     )
 
-@router.post("/refresh")
+
+@router.post("/refresh-token")
 async def refresh_token(
-    token_data: RefreshTokenSerializer
+    request: RefreshTokenRequest
 ):
     return await AuthController.refresh_token(
-        refresh_token=token_data.refresh_token
+        refresh_token=request.refresh_token
     )

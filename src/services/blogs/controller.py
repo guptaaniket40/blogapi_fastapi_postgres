@@ -12,13 +12,8 @@ from src.utils.response import success_response
 class BlogController:
 
     @classmethod
-    async def get_all_blogs(
-        cls,
-        db
-    ):
-        blogs = await BlogSchema.get_blog_data(
-            db=db
-        )
+    async def get_all_blogs(cls):
+        blogs = await BlogSchema.get_all_blogs()
 
         blog_data = [
             BlogResponseSerializer.model_validate(blog).model_dump(mode="json")
@@ -33,11 +28,9 @@ class BlogController:
     @classmethod
     async def get_blog_by_id(
         cls,
-        blog_id,
-        db
+        blog_id
     ):
-        blog = await BlogSchema.get_blog_data(
-            db=db,
+        blog = await BlogSchema.get_all_blogs(
             blog_id=blog_id
         )
 
@@ -58,7 +51,6 @@ class BlogController:
     async def create_blog(
         cls,
         blog_data,
-        db,
         current_user
     ):
         image_url = None
@@ -70,7 +62,6 @@ class BlogController:
             )
 
         blog = await BlogSchema.create_blog(
-            db=db,
             request=blog_data,
             image_url=image_url,
             user_id=current_user.id
@@ -88,11 +79,9 @@ class BlogController:
         cls,
         blog_id,
         blog_data,
-        db,
         current_user
     ):
-        blog = await BlogSchema.get_blog_data(
-            db=db,
+        blog = await BlogSchema.get_all_blogs(
             blog_id=blog_id
         )
 
@@ -122,7 +111,6 @@ class BlogController:
             )
 
         updated_blog = await BlogSchema.update_blog(
-            db=db,
             blog=blog,
             request=blog_data,
             image_url=image_url
@@ -140,11 +128,9 @@ class BlogController:
         cls,
         blog_id,
         update_data,
-        db,
         current_user
     ):
-        blog = await BlogSchema.get_blog_data(
-            db=db,
+        blog = await BlogSchema.get_all_blogs(
             blog_id=blog_id
         )
 
@@ -174,7 +160,6 @@ class BlogController:
             )
 
         updated_blog = await BlogSchema.patch_blog(
-            db=db,
             blog=blog,
             update_data=update_data,
             image_url=image_url
@@ -191,11 +176,9 @@ class BlogController:
     async def delete_blog(
         cls,
         blog_id,
-        db,
         current_user
     ):
-        blog = await BlogSchema.get_blog_data(
-            db=db,
+        blog = await BlogSchema.get_all_blogs(
             blog_id=blog_id
         )
 
@@ -217,7 +200,6 @@ class BlogController:
             )
 
         await BlogSchema.delete_blog(
-            db=db,
             blog=blog
         )
 

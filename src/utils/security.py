@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.config import Config
-from src.database.db_config import db
+from src.database.db_config import get_db
 from src.database.models import User
 
 
@@ -100,7 +100,7 @@ class PasswordHasher:
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    db_session: AsyncSession = Depends(db.get_db)
+    db_session: AsyncSession = Depends(get_db)
 ):
     payload = TokenHandler.decode_token(token)
 

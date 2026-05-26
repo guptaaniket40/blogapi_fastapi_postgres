@@ -9,33 +9,34 @@ Base = declarative_base()
 
 class AsyncDatabaseSession:
     def __init__(self):
-        self._engine = None
         self._session = None
+        self._engine = None
+
+    def __getattr__(self, name):
+        return getattr(self._session, name)
 
     def init(self):
         self._engine = create_async_engine(
             Config.DB_CONFIG,
-            echo=True,
-            future=True
+            future=True,
+            echo=True
         )
 
-        self._session = sessionmaker(
+        session_local = sessionmaker(
             bind=self._engine,
-            class_=AsyncSession,
-            expire_on_commit=False
+            expire_on_commit=False,
+            class_=AsyncSession
         )
 
-    async def create_all(self):
-        async with self._engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-
-    async def close(self):
-        await self._engine.dispose()
-
-    async def get_db(self):
-        async with self._session() as session:
-            yield session
+        self._session = session_local()
 
 
 db = AsyncDatabaseSession()
 db.init()
+
+
+async def get_db():
+    try:
+        yield db
+    finally:
+        pass

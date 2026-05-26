@@ -1,15 +1,16 @@
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.models import Blog
+from src.database.db_config import db
 
+
+ 
 
 class BlogSchema:
 
     @classmethod
-    async def get_blog_data(
+    async def get_all_blogs(
         cls,
-        db: AsyncSession,
         blog_id=None,
         user_id=None
     ):
@@ -24,21 +25,18 @@ class BlogSchema:
         result = await db.execute(query)
 
         if blog_id:
-            blog = result.scalar_one_or_none()
-        else:
-            blog = result.scalars().all()
+            return result.scalar_one_or_none()
 
-        return blog
-
+        return result.scalars().all()
+    
     @classmethod
     async def create_blog(
         cls,
-        db: AsyncSession,
         request,
-        image_url=None,
-        user_id=None
+        image_url,
+        user_id
     ):
-        new_blog = Blog(
+        blog = Blog(
             title=request.title,
             content=request.content,
             author=request.author,
@@ -46,16 +44,15 @@ class BlogSchema:
             user_id=user_id
         )
 
-        db.add(new_blog)
+        db.add(blog)
         await db.commit()
-        await db.refresh(new_blog)
+        await db.refresh(blog)
 
-        return new_blog
+        return blog
 
     @classmethod
     async def update_blog(
         cls,
-        db: AsyncSession,
         blog,
         request,
         image_url=None
@@ -64,7 +61,7 @@ class BlogSchema:
         blog.content = request.content
         blog.author = request.author
 
-        if image_url:
+        if image_url is not None:
             blog.image_url = image_url
 
         await db.commit()
@@ -75,21 +72,15 @@ class BlogSchema:
     @classmethod
     async def patch_blog(
         cls,
-        db: AsyncSession,
         blog,
         update_data,
         image_url=None
     ):
-        if "title" in update_data:
-            blog.title = update_data["title"]
+        for key, value in update_data.items():
+            if value is not None and hasattr(blog, key):
+                setattr(blog, key, value)
 
-        if "content" in update_data:
-            blog.content = update_data["content"]
-
-        if "author" in update_data:
-            blog.author = update_data["author"]
-
-        if image_url:
+        if image_url is not None:
             blog.image_url = image_url
 
         await db.commit()
@@ -100,7 +91,6 @@ class BlogSchema:
     @classmethod
     async def delete_blog(
         cls,
-        db: AsyncSession,
         blog
     ):
         await db.delete(blog)
