@@ -7,9 +7,14 @@ from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.config import Config
 from src.database.db_config import get_db
 from src.database.models import User
+from src.database.jwt_config import (
+    SECRET_KEY,
+    ALGORITHM,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    REFRESH_TOKEN_EXPIRE_DAYS
+)
 
 
 PWD_CONTEXT = CryptContext(
@@ -29,7 +34,7 @@ class TokenHandler:
         to_encode = data.copy()
 
         expire = datetime.now(timezone.utc) + timedelta(
-            minutes=Config.ACCESS_TOKEN_EXPIRE_MINUTES
+            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
         )
 
         to_encode.update({
@@ -39,8 +44,8 @@ class TokenHandler:
 
         return jwt.encode(
             to_encode,
-            Config.SECRET_KEY,
-            algorithm=Config.ALGORITHM
+            SECRET_KEY,
+            algorithm=ALGORITHM
         )
 
     @classmethod
@@ -48,7 +53,7 @@ class TokenHandler:
         to_encode = data.copy()
 
         expire = datetime.now(timezone.utc) + timedelta(
-            days=Config.REFRESH_TOKEN_EXPIRE_DAYS
+            days=REFRESH_TOKEN_EXPIRE_DAYS
         )
 
         to_encode.update({
@@ -58,8 +63,8 @@ class TokenHandler:
 
         return jwt.encode(
             to_encode,
-            Config.SECRET_KEY,
-            algorithm=Config.ALGORITHM
+            SECRET_KEY,
+            algorithm=ALGORITHM
         )
 
     @classmethod
@@ -67,8 +72,8 @@ class TokenHandler:
         try:
             return jwt.decode(
                 token,
-                Config.SECRET_KEY,
-                algorithms=[Config.ALGORITHM]
+                SECRET_KEY,
+                algorithms=[ALGORITHM]
             )
         except Exception:
             raise HTTPException(
