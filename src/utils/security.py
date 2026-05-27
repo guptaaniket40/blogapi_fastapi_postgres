@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import jwt
 from passlib.context import CryptContext
 from sqlalchemy import select
@@ -22,9 +22,7 @@ PWD_CONTEXT = CryptContext(
     deprecated="auto"
 )
 
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/api/v1/auth/login"
-)
+bearer_scheme = HTTPBearer()
 
 
 class TokenHandler:
@@ -104,9 +102,11 @@ class PasswordHasher:
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db_session: AsyncSession = Depends(get_db)
 ):
+    token = credentials.credentials
+
     payload = TokenHandler.decode_token(token)
 
     user_id = payload.get("user_id")
