@@ -9,10 +9,7 @@ from src.database.config import Config
 
 
 def get_s3_image_url(file_key: str) -> str:
-    return (
-        f"https://{Config.AWS_BUCKET_NAME}.s3."
-        f"{Config.AWS_REGION}.amazonaws.com/{file_key}"
-    )
+    return f"https://{Config.AWS_CLOUDFRONT_DOMAIN}/{file_key}"
 
 
 def get_s3_key_from_url(image_url: str) -> str:
